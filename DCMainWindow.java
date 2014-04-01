@@ -128,9 +128,15 @@ public class DCMainWindow {
 		button.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				PDBFilter filter = new PDBFilter();
+				browseDialog.addChoosableFileFilter(filter);
 				int returnVal = browseDialog.showOpenDialog(mainFrame);
-				if(returnVal != JFileChooser.APPROVE_OPTION) return; // Stop if no selection was made
+				if(returnVal != JFileChooser.APPROVE_OPTION) {  // Stop if no selection was made
+					browseDialog.removeChoosableFileFilter(stateFilter); // Clean up for the next use
+					return; 
+				}
 				pdbFile = browseDialog.getSelectedFile();
+				browseDialog.removeChoosableFileFilter(filter); // Clean up for the next use
 				picLabel2.setIcon(iconOK);
 			}
 			
@@ -284,6 +290,19 @@ public class DCMainWindow {
     	setupDialog = null;
 	}
 	
+	
+	// Initialize the Drag-and-Drop functionality
+	// Simply determines the dropped file and calls readRDCInput to read it in
+	private void initDragAndDrop() {
+		new FileDrop(mainFrame, new FileDrop.Listener() {   
+			public void filesDropped(File[] files) {
+				readRDCInput(files[0]);
+			} 
+		}); // end FileDrop.Listener
+	}
+
+	
+	// Initialization of the top-level menu
 	private void initMenu() {
 		JMenuBar menuBar;
 		JMenu menu;
@@ -292,9 +311,33 @@ public class DCMainWindow {
 		//Create the menu bar.
 		menuBar = new JMenuBar();
 
-		//Build the File menu.
-		menu = new JMenu("File");
+		initFileMenu(menuBar);  // 'File'
+		
+		initSettingsMenu(menuBar); // 'Settings'
+		
+		initCalculationsMenu(menuBar); // 'Calculations'
+
+		mainFrame.setJMenuBar(menuBar);	
+	}
+
+	//Build the File menu.	
+	private void initFileMenu(JMenuBar menuBar) {
+		JMenu menu = new JMenu("File");
 		menuBar.add(menu);
+
+		JMenuItem menuItem = new JMenuItem("Load RDC data...");
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// Bring up the Load File dialog
+				browseDialog.setAcceptAllFileFilterUsed(true);
+				int returnVal = browseDialog.showOpenDialog(mainFrame);
+				if(returnVal != JFileChooser.APPROVE_OPTION) return; // Stop if no selection was made
+				File file = browseDialog.getSelectedFile();
+				readRDCInput(file);
+			}
+		});
+		menu.add(menuItem);
 
 		menuItem = new JMenuItem("Save state...");
 		menuItem.addActionListener(new ActionListener() {
@@ -304,33 +347,15 @@ public class DCMainWindow {
 				browseDialog.setAcceptAllFileFilterUsed(false);
 				browseDialog.addChoosableFileFilter(stateFilter);
 				int returnVal = browseDialog.showSaveDialog(mainFrame);
-				if(returnVal != JFileChooser.APPROVE_OPTION) return; // Stop if no selection was made
-				File file = browseDialog.getSelectedFile();
-				
-				// If necessary, append the "state" extension to file name
-				String file_name = file.toString();
-				if (!file_name.endsWith(".state")) {
-				    file_name += ".state";
-				    file = new File(file_name);
+				if(returnVal != JFileChooser.APPROVE_OPTION) {  // Stop if no selection was made
+					browseDialog.removeChoosableFileFilter(stateFilter); // Clean up for the next use
+					return; 
 				}
 				
-				try {
-					//use buffering
-					OutputStream fileStream = new FileOutputStream(file);
-					OutputStream buffer = new BufferedOutputStream(fileStream);
-					ObjectOutput output = new ObjectOutputStream(buffer);
-					try{
-						output.writeObject(pdbFile);
-						output.writeObject(media);
-					}
-					finally {
-				        output.close();
-					}
-				}  
-				catch(IOException ex){
-					//System.out.println(ex.printStackTrace());
-					ex.printStackTrace();
-				}		
+				File file = browseDialog.getSelectedFile();
+				browseDialog.removeChoosableFileFilter(stateFilter); // Clean up for the next use
+				
+				saveState(file);
 			}
 		});
 		menu.add(menuItem);
@@ -344,50 +369,15 @@ public class DCMainWindow {
 				browseDialog.addChoosableFileFilter(stateFilter);
 				
 				int returnVal = browseDialog.showOpenDialog(mainFrame);
-				if(returnVal != JFileChooser.APPROVE_OPTION) return; // Stop if no selection was made
-				File file = browseDialog.getSelectedFile();
+				if(returnVal != JFileChooser.APPROVE_OPTION) {  // Stop if no selection was made
+					browseDialog.removeChoosableFileFilter(stateFilter); // Clean up for the next use
+					return; 
+				}
 				
-				try{
-					//use buffering
-					InputStream fileStream = new FileInputStream(file);
-					InputStream buffer = new BufferedInputStream(fileStream);
-					ObjectInput input = new ObjectInputStream (buffer);
-					try {
-						pdbFile = (File)input.readObject();
-						media = (ArrayList<AllignmentMedium>)input.readObject();
-				    }
-				    finally {
-				    	input.close();
-				    	refreshMediaPane();
-				    	picLabel3.setIcon(iconOK);
-				    	
-				    	// Find at least one non-empty RDC set, and use its sequence to update the current sequence
-				    	for(AllignmentMedium medium: media) {
-				    		if(medium.getCount() > 0) {
-				    			sequence = medium.getRDCSets().get(0).getSequence();
-				    			break;
-				    		}
-				    	}
-				    	
-				    	// Update the state icon for sequence
-				    	if(sequence.getLength()==0)
-				    		picLabel1.setIcon(iconStop);
-				    	else
-				    		picLabel1.setIcon(iconOK);
-				    	
-				    	// Update the state icon for PDB file
-				    	if(pdbFile == null)
-				    		picLabel2.setIcon(iconStop);
-				    	else
-				    		picLabel2.setIcon(iconOK);				    	
-				    }
-				}
-				catch(ClassNotFoundException ex){
-					ex.printStackTrace();
-				}
-				catch(IOException ex){
-					ex.printStackTrace();
-				}
+				File file = browseDialog.getSelectedFile();
+				browseDialog.removeChoosableFileFilter(stateFilter); // Clean up for the next use
+				
+				loadState(file);
 			}
 		});
 		menu.add(menuItem);
@@ -426,23 +416,27 @@ public class DCMainWindow {
 				mainFrame.dispose();			
 			}
 		});
-		menu.add(menuItem);
-
-		//Build the Settings menu.
-		menu = new JMenu("Settings");
+		menu.add(menuItem);		
+	}
+	
+	//Build the Settings menu.
+	private void initSettingsMenu(JMenuBar menuBar) {
+		JMenu menu = new JMenu("Settings");
 		menuBar.add(menu);
 
-		menuItem = new JMenuItem("Set working folder");
+		JMenuItem menuItem = new JMenuItem("Set working folder");
 		menu.add(menuItem);
 		
 		menuItem = new JMenuItem("Alignment media");
 		menu.add(menuItem);
-
-		//Build the Calculations menu.
-		menu = new JMenu("Calculations");
+	}
+	
+	//Build the Calculations menu.
+	private void initCalculationsMenu(JMenuBar menuBar) {
+		JMenu menu = new JMenu("Calculations");
 		menuBar.add(menu);
 
-		menuItem = new JMenuItem("Run DC");
+		JMenuItem menuItem = new JMenuItem("Run DC");
 		menuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -624,10 +618,84 @@ public class DCMainWindow {
 		});
 		
 		menu.add(menuItem);
+	}
 
-		mainFrame.setJMenuBar(menuBar);	
+	
+	// Load state from the given file
+	private void loadState(File file) {
+		try {
+			//use buffering
+			InputStream fileStream = new FileInputStream(file);
+			InputStream buffer = new BufferedInputStream(fileStream);
+			ObjectInput input = new ObjectInputStream (buffer);
+			try {
+				pdbFile = (File)input.readObject();
+				media = (ArrayList<AllignmentMedium>)input.readObject();
+		    }
+		    finally {
+		    	input.close();
+		    	refreshMediaPane();
+		    	picLabel3.setIcon(iconOK);
+		    	
+		    	// Find at least one non-empty RDC set, and use its sequence to update the current sequence
+		    	for(AllignmentMedium medium: media) {
+		    		if(medium.getCount() > 0) {
+		    			sequence = medium.getRDCSets().get(0).getSequence();
+		    			break;
+		    		}
+		    	}
+		    	
+		    	// Update the state icon for sequence
+		    	if(sequence.getLength()==0)
+		    		picLabel1.setIcon(iconStop);
+		    	else
+		    		picLabel1.setIcon(iconOK);
+		    	
+		    	// Update the state icon for PDB file
+		    	if(pdbFile == null)
+		    		picLabel2.setIcon(iconStop);
+		    	else
+		    		picLabel2.setIcon(iconOK);				    	
+		    }
+		}
+		catch(ClassNotFoundException ex){
+			ex.printStackTrace();
+		}
+		catch(IOException ex){
+			ex.printStackTrace();
+		}
 	}
 	
+	
+	// Save the state into the given file
+	private void saveState(File file) {
+		// If necessary, append the "state" extension to file name
+		String file_name = file.toString();
+		if (!file_name.endsWith(".state")) {
+		    file_name += ".state";
+		    file = new File(file_name);
+		}
+		
+		try {
+			//use buffering
+			OutputStream fileStream = new FileOutputStream(file);
+			OutputStream buffer = new BufferedOutputStream(fileStream);
+			ObjectOutput output = new ObjectOutputStream(buffer);
+			try{
+				output.writeObject(pdbFile);
+				output.writeObject(media);
+			}
+			finally {
+		        output.close();
+			}
+		}  
+		catch(IOException ex){
+			//System.out.println(ex.printStackTrace());
+			ex.printStackTrace();
+		}				
+	}
+	
+	// Export all the RDC sets for the given alignment media in the full DC format
 	private void exportInDCFormat(File file, AllignmentMedium medium) {
 		try {
 	    	Writer writer = new BufferedWriter(new FileWriter(file));
@@ -648,78 +716,78 @@ public class DCMainWindow {
 
 	}
 	
-	private void initDragAndDrop() {
-		new FileDrop(mainFrame, new FileDrop.Listener() {   
-			public void filesDropped(File[] files) {
-				File file = files[0];
-				try {
-					Format fileFormat = getFileFormat(file);
-					switch(fileFormat) {
-					case Simple:
-						if(media.size() == 0) {
-							JOptionPane.showMessageDialog(mainFrame, "Please add at least one medium", "Alert", JOptionPane.WARNING_MESSAGE);
-							return;
-						}
-						
-						RDCTypeSelectDialog dialog = new RDCTypeSelectDialog(mainFrame, media);
-						dialog.setSelectedMedium(lastSelectedMedium); // Recall last selected medium
-						dialog.setVisible(true);
-						
-						if(!dialog.selectionWasMade()) return; // Dialog was dismissed
-						
-						int mediumIndex = dialog.getSelectedMedium();
-						lastSelectedMedium = mediumIndex; // Memorize selected medium
-						RDCType selectedType = dialog.getSelectedType();
-						
-						testSet = parseSimpleInput(file);
-						testSet.setSequence(sequence);
-						testSet.setType(selectedType);
-						media.get(mediumIndex).addRDCSet(testSet);
-												
-						refreshMediaPane();
-
-						break;
-					case Full:
-						AllignmentMedium selectedMedium;
-						if(media.size() > 1) {  // Only ask to select medium if there are more than one
-							RDCOutputSelectDialog mediumDialog = new RDCOutputSelectDialog(mainFrame, media);
-							mediumDialog.setVisible(true);
-							
-							if(mediumDialog.selectionWasMade())
-								selectedMedium = media.get(mediumDialog.getSelectedMedium());
-							else
-								return; // If no selection was made then stop here
-						} else
-							selectedMedium = media.get(0);
-
-						Collection<RDCSet> newSets = parseFullInput(file);
-						if(newSets == null) {
-							JOptionPane.showConfirmDialog(mainFrame, 
-									"Failed to extract RDCs from file",
-									"Error", JOptionPane.ERROR_MESSAGE);
-							return;
-						} else {
-							for(RDCSet set : newSets)
-								selectedMedium.addRDCSet(set);
-							
-							refreshMediaPane();
-						}
-						
-						break;
-					case Unknown:
-						JOptionPane.showConfirmDialog(mainFrame, 
-								"Unknown file format!",
-								"Error", JOptionPane.ERROR_MESSAGE);
-					}
-					String fileName = file.getCanonicalPath();
-				} catch (IOException e) {
-					JOptionPane.showConfirmDialog(mainFrame, 
-							"Can't resolve the dropped file name!",
-							"Error", JOptionPane.ERROR_MESSAGE);
-					e.printStackTrace();
+	
+	
+	// This function will determine the format of the provided file
+	// and will read its content according to the format (Simple or Full)
+	private void readRDCInput(File file) {
+		try {
+			Format fileFormat = getFileFormat(file);
+			switch(fileFormat) {
+			case Simple:
+				if(media.size() == 0) {
+					JOptionPane.showMessageDialog(mainFrame, "Please add at least one medium", "Alert", JOptionPane.WARNING_MESSAGE);
+					return;
 				}
-			}   // end filesDropped
-		}); // end FileDrop.Listener
+				
+				RDCTypeSelectDialog dialog = new RDCTypeSelectDialog(mainFrame, media);
+				dialog.setSelectedMedium(lastSelectedMedium); // Recall last selected medium
+				dialog.setVisible(true);
+				
+				if(!dialog.selectionWasMade()) return; // Dialog was dismissed
+				
+				int mediumIndex = dialog.getSelectedMedium();
+				lastSelectedMedium = mediumIndex; // Memorize selected medium
+				RDCType selectedType = dialog.getSelectedType();
+				
+				testSet = parseSimpleInput(file);
+				testSet.setSequence(sequence);
+				testSet.setType(selectedType);
+				media.get(mediumIndex).addRDCSet(testSet);
+										
+				refreshMediaPane();
+
+				break;
+			case Full:
+				AllignmentMedium selectedMedium;
+				if(media.size() > 1) {  // Only ask to select medium if there are more than one
+					RDCOutputSelectDialog mediumDialog = new RDCOutputSelectDialog(mainFrame, media);
+					mediumDialog.setVisible(true);
+					
+					if(mediumDialog.selectionWasMade())
+						selectedMedium = media.get(mediumDialog.getSelectedMedium());
+					else
+						return; // If no selection was made then stop here
+				} else
+					selectedMedium = media.get(0);
+
+				Collection<RDCSet> newSets = parseFullInput(file);
+				if(newSets == null) {
+					JOptionPane.showConfirmDialog(mainFrame, 
+							"Failed to extract RDCs from file",
+							"Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				} else {
+					for(RDCSet set : newSets)
+						selectedMedium.addRDCSet(set);
+					
+					refreshMediaPane();
+				}
+				
+				break;
+			case Unknown:
+				JOptionPane.showConfirmDialog(mainFrame, 
+						"Unknown file format!",
+						"Error", JOptionPane.ERROR_MESSAGE);
+			}
+			String fileName = file.getCanonicalPath();
+		} catch (IOException e) {
+			JOptionPane.showConfirmDialog(mainFrame, 
+					"Can't resolve the dropped file name!",
+					"Error", JOptionPane.ERROR_MESSAGE);
+			e.printStackTrace();
+		}
+		
 	}
 	
 	private RDCSet parseSimpleInput(File file) {
@@ -760,6 +828,8 @@ public class DCMainWindow {
 			return rdcSet;
 	}
 
+	
+	// Parse a file in full format, producing a collection of RDC sets
 	private Collection<RDCSet> parseFullInput(File file) {
 		System.out.println("Parsing full input");
 		BufferedReader br;
@@ -862,6 +932,7 @@ public class DCMainWindow {
 			return sets.values();
 	}
 
+	// Determine the file format
 	private Format getFileFormat(File file) {
 		BufferedReader br;
 		String line;
@@ -877,14 +948,19 @@ public class DCMainWindow {
 				if(scanner.hasNextInt()) break;
 			}
 			
-			if(line == null) return Format.Unknown;
+			if(line == null) {
+				br.close();
+				return Format.Unknown;
+			}
+			
 			// Count the number of substrings in line, by splitting it around sets of white-space characters
+			line = line.trim(); // Remove leading and trailing whitespace, so it doesn't mess with 'split'
 			parts = line.split("[\\s ]+");
 			br.close();
 			
 			if(parts.length == 2)
 				return Format.Simple;
-			else if(parts.length > 9)  // This allows comments in the data line. (Normal line usually gives length of 10)
+			else if(parts.length >= 9)  // This allows comments in the data line. (Normal line gives the length of 9)
 				return Format.Full;
 		} catch (IOException e) {
 			JOptionPane.showConfirmDialog(mainFrame, 
@@ -955,4 +1031,42 @@ public class DCMainWindow {
 			return "State files (*.state)";
 		}
 	}
+	
+	
+	// Filter class for showing only files with extension "pdb" in a FileChooser
+	public class PDBFilter extends FileFilter {
+		private String getExtension(File f) {
+	        String ext = null;
+	        String s = f.getName();
+	        int i = s.lastIndexOf('.');
+
+	        if (i > 0 &&  i < s.length() - 1) {
+	            ext = s.substring(i+1).toLowerCase();
+	        }
+	        return ext;
+	    }
+		
+		@Override
+		public boolean accept(File f) {
+			if (f.isDirectory()) {
+		        return true;
+		    }
+
+		    String extension = getExtension(f);
+		    if (extension != null) {
+		        if (extension.equals("pdb") || extension.equals("sa")) {
+		                return true;
+		        } else {
+		            return false;
+		        }
+		    }
+
+		    return false;
+		}
+		
+		public String getDescription() {
+			return "PDB files (*.pdb)";
+		}
+	}
+
 }

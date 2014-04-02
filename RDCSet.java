@@ -34,6 +34,11 @@ public class RDCSet implements Serializable {
 		return type.name;
 	}
 	
+	// Returns the factor to multiply these RDCs by to scale them to NH
+	public double getNHScaling() {
+		return type.getNHScaling();
+	}
+	
 	public void addRDC(int resNum, float value) {
 		RDC rdc = new RDC(resNum, value);
 		rdcs.add(rdc);

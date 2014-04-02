@@ -26,6 +26,11 @@ public enum RDCType implements Serializable {
 		this.uncert = uncert;
 	}
 	
+	// Returns the factor to multiply these RDCs by to scale them to NH
+	public double getNHScaling() {
+		return Math.abs(RDCType.NH.coupling / this.coupling);
+	}
+	
 	public String toString() {
 		return name + " : " + Double.toString(coupling);
 	}

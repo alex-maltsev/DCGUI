@@ -48,7 +48,7 @@ public class GraphWindow extends JFrame {
 	private static final long serialVersionUID = 1817162240395467260L;
 	private DCMainWindow parent;
 	private ArrayList<RDCSet> sets;
-	private ArrayList<RDCSeries> allSeries, activeSeries;
+	private ArrayList<RDCSeries> allSeries, allScaledSeries, activeSeries;
 	int curSet;
 	
 	private float [][] data;
@@ -167,24 +167,39 @@ public class GraphWindow extends JFrame {
 	private void createSeriesList() {
 		allSeries = new ArrayList<RDCSeries>();
 		
+		// These scaled datasets will only be used when plotting all RDC types on the same plot
+		allScaledSeries = new ArrayList<RDCSeries>();
+		
 		// Fill the data array
 		for(int i=0; i<sets.size(); i++) {
 			RDCSet set = sets.get(i);
+			
 		    RDCSeries series = new RDCSeries(set.getTypeString());
+		    
+		    double scalingFactor = set.getNHScaling();
+		    RDCSeries scaledSeries = new RDCSeries(set.getTypeString());
 
 			for(int j=0; j<set.getCount(); j++) {
 				RDC rdc = set.get(j);
 				if(rdc.isUsed && rdc.wasPredicted) {
+					// The tool-tip labels will contain residue number, RDC type, and delta between obs and pred values
 					String label = String.format("%s res %d: delta %.3f Hz", set.getTypeString(), rdc.resNum, rdc.predValue-rdc.value);
 					series.add(rdc.predValue, rdc.value, label);
+					
+					// The scaled data-points will have scaled RDC values, but non-scaled deltas on labels
+					scaledSeries.add(scalingFactor * rdc.predValue, scalingFactor * rdc.value, label);
 				}
 			}
 
 			allSeries.add(series);
+			allScaledSeries.add(scaledSeries);
 		}
 
 	}
 	
+	
+	// Called externally after providing new RDC sets, to force refresh of plot data
+	// followed by redrawing of the plot.
 	public void refresh() {
 		curSet = 0;
 		typeName.setText(sets.get(0).getTypeString());
@@ -193,13 +208,13 @@ public class GraphWindow extends JFrame {
 		redrawChart();
 	}
 	
+	
+	// Called to redraw the chart, based on the previously set plot data
 	private void redrawChart() {
 		JPanel contentPane = (JPanel)getContentPane();
-	//	if(chartPane != null)
-	//		contentPane.remove(chartPane);
 		
 		if(cbUseAll.isSelected()) {
- 			activeSeries = allSeries;
+ 			activeSeries = allScaledSeries;
  		} else {
  			activeSeries = new ArrayList<RDCSeries>();
  			activeSeries.add(allSeries.get(curSet));
@@ -213,6 +228,8 @@ public class GraphWindow extends JFrame {
 		}
 	}
 
+	
+	// The function actually creating the plot itself
  	private JFreeChart drawCorrelation() {
         XYSeriesCollection dataCollection = new XYSeriesCollection();
         
@@ -226,13 +243,13 @@ public class GraphWindow extends JFrame {
                 null, "Predicted", "Observed", dataCollection,
                 PlotOrientation.VERTICAL, true, true, false);
         XYPlot xyPlot = (XYPlot) jfreechart.getPlot();
-      //  xyPlot.setDomainCrosshairVisible(true);
-      //  xyPlot.setRangeCrosshairVisible(true);
         xyPlot.setRangeZeroBaselineVisible(true);
         xyPlot.setDomainZeroBaselineVisible(true);
         
+        // This renderer object is used to setup all the properties of the data in the plot
         XYItemRenderer renderer = xyPlot.getRenderer();
         
+        // Setup the tooltip generator to be used by the plot
         XYToolTipGenerator toolTipGen = new XYToolTipGenerator() {
             @Override
             public String generateToolTip(XYDataset dataSet, int serIndex, int index) {
@@ -240,11 +257,13 @@ public class GraphWindow extends JFrame {
             	RDCSeries series = activeSeries.get(serIndex);
             	return series.getLabel(dataSet.getXValue(serIndex, index), dataSet.getYValue(serIndex, index));
             }
-         };
-
-         renderer.setBaseToolTipGenerator(toolTipGen);
-         
-        //    Shape cross = new Ellipse2D.Double(0,0,5,5); //ShapeUtilities.createDiagonalCross(3, 1);
+        };
+        renderer.setBaseToolTipGenerator(toolTipGen);
+        
+        // Set the different datasets to use point shapes and colors from 
+        // the default sequences provided by JFreeChart.
+        // Also making sure that the color and shape for a given RDC type is the same
+        // when displayed by itself, or together with all others
         if(activeSeries.size() == 1) {
  			Shape shape = DefaultDrawingSupplier.DEFAULT_SHAPE_SEQUENCE[curSet];
  			Paint paint = DefaultDrawingSupplier.DEFAULT_PAINT_SEQUENCE[curSet];
@@ -278,7 +297,9 @@ public class GraphWindow extends JFrame {
         return jfreechart;
 	}
 
-
+ 	
+ 	// Custom XYSeries-derived class, mostly to make it possible to properly display 
+ 	// tooltips of desired format. The use of a hash map turned out key for that.
 	class RDCSeries extends XYSeries
 	{
 		private static final long serialVersionUID = 2827998698044419507L;

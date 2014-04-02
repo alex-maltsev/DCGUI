@@ -304,12 +304,8 @@ public class DCMainWindow {
 	
 	// Initialization of the top-level menu
 	private void initMenu() {
-		JMenuBar menuBar;
-		JMenu menu;
-		JMenuItem menuItem;
-
-		//Create the menu bar.
-		menuBar = new JMenuBar();
+		//Create the main menu bar.
+		JMenuBar menuBar = new JMenuBar();
 
 		initFileMenu(menuBar);  // 'File'
 		
@@ -775,13 +771,12 @@ public class DCMainWindow {
 				}
 				
 				break;
-			case Unknown:
+			default:
 				JOptionPane.showConfirmDialog(mainFrame, 
 						"Unknown file format!",
 						"Error", JOptionPane.ERROR_MESSAGE);
 			}
-			String fileName = file.getCanonicalPath();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			JOptionPane.showConfirmDialog(mainFrame, 
 					"Can't resolve the dropped file name!",
 					"Error", JOptionPane.ERROR_MESSAGE);
@@ -791,7 +786,6 @@ public class DCMainWindow {
 	}
 	
 	private RDCSet parseSimpleInput(File file) {
-		System.out.println("Parsing simple input");
 		BufferedReader br;
 		String line;
 		Scanner scanner;
@@ -831,13 +825,11 @@ public class DCMainWindow {
 	
 	// Parse a file in full format, producing a collection of RDC sets
 	private Collection<RDCSet> parseFullInput(File file) {
-		System.out.println("Parsing full input");
 		BufferedReader br;
 		String line;
 		Scanner scanner;
 		int resNum;
 		float rdcValue, uncertValue;
-		RDCSet rdcSet = new RDCSet();
 		int atom1Res, atom2Res;
 		String atom1Type, atom2Type, res1Type, res2Type;
 		Pattern resNamePattern = Pattern.compile("\\w\\w\\w");
@@ -918,7 +910,6 @@ public class DCMainWindow {
 				curSet.addRDC(resNum, rdcValue, uncertValue);
 			}
 			
-			System.out.printf("Number of sets is %d", sets.size());
 			br.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

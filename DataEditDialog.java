@@ -37,7 +37,7 @@ import javax.swing.table.TableColumnModel;
 public class DataEditDialog extends JDialog implements TableModelListener, ActionListener {
 	private static final long serialVersionUID = -1659515848383070790L;
 	
-	private ArrayList<AllignmentMedium> media;
+	private ArrayList<AlignmentMedium> media;
 	private RDCSet curSet;
 	private int selectedSet=0, selectedMedium=0;
 
@@ -51,7 +51,7 @@ public class DataEditDialog extends JDialog implements TableModelListener, Actio
 	private JButton prevMedium, nextMedium, prevType, nextType;
 	private JLabel mediumName, typeName;
 	
-	public DataEditDialog(Frame owner, ArrayList<AllignmentMedium> media) {
+	public DataEditDialog(Frame owner, ArrayList<AlignmentMedium> media) {
 		super(owner, "Edit RDC data", true);
 		
 		if(media == null) {

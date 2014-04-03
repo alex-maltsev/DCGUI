@@ -6,28 +6,24 @@ import java.util.Scanner;
 
 
 public class DCOutput {
-	public float Qfactor, Rcorr, rms, chi2;
-	public float Da, Rh;
-	public float psi, theta, phi;
-	public float [] Saupe = new float[5];
-	public float [][] RotMatrix;
+	public FittingResult fittingResult;
+	
 	private File resultFile;
-	private AllignmentMedium medium;
+	private AlignmentMedium medium;
 	private RDCSet currentSet;
 	private int setIndex, rdcIndex; // Indexes used to track where to put predicted RDCs
 	
 	private boolean loadedSuccessfully = false; 
 	
 	public DCOutput() {
-		RotMatrix = new float [3][];
-		for(int i=0; i<3; i++)
-			RotMatrix[i] = new float[3];
+		fittingResult = new FittingResult();
 	}
+	
 	// This function loads the results from DC output file. The meta results such as Q-factor
 	// are stored in respective member variables. The predicted RDCs are copied into the AlignmentMedium object
 	// passed as the second argument. IMPORTANT: the AlignmentMedium object must be the same that was used to
 	// generate the DC input!
-	public void load(File file, AllignmentMedium medium) {
+	public void load(File file, AlignmentMedium medium) {
 		this.medium = medium;
 		resultFile = file;
 		if(medium != null) currentSet = medium.get(0);
@@ -57,6 +53,12 @@ public class DCOutput {
 		}
 		
 		loadedSuccessfully = true;
+		
+		// Pass the fitting result to the alignment medium if necessary
+		if(medium != null) {
+			medium.fittingResult = fittingResult;
+			medium.fittingWasDone = true;
+		}
 	}
 	
 	// From the provided DC output file load meta data only
@@ -130,30 +132,30 @@ public class DCOutput {
 		
 		String key = scanner.next("\\w+");
 		if(key.equals("Q_FACTOR")) {
-			Qfactor = scanner.nextFloat();
+			fittingResult.Qfactor = scanner.nextFloat();
 		} else if(key.equals("CORR_R")) {
-			Rcorr = scanner.nextFloat();
+			fittingResult.Rcorr = scanner.nextFloat();
 		} else if(key.equals("RMS")) {
-			rms = scanner.nextFloat();
+			fittingResult.rms = scanner.nextFloat();
 		} else if(key.equals("Chi2")) {
-			chi2 = scanner.nextFloat();
+			fittingResult.chi2 = scanner.nextFloat();
 		} else if(key.equals("Da_HN")) {
-			Da = scanner.nextFloat();
+			fittingResult.Da = scanner.nextFloat();
 		} else if(key.equals("Rhombicity")) {
-			Rh = scanner.nextFloat();
+			fittingResult.Rh = scanner.nextFloat();
 		} else if(key.equals("SAUPE")) {
 			for(int i=0; i<5; i++)
-				Saupe[i] = scanner.nextFloat();
+				fittingResult.Saupe[i] = scanner.nextFloat();
 		} else if(key.equals("ROTATION_MATRIX")) {
 			int row = scanner.nextInt() - 1; // Read in the matrix row number
 			for(int i=0; i<3; i++)
-				RotMatrix[row][i] = scanner.nextFloat();
+				fittingResult.RotMatrix[row][i] = scanner.nextFloat();
 		} else if(key.equals("PSI")) {
-			psi = scanner.nextFloat();
+			fittingResult.psi = scanner.nextFloat();
 		} else if(key.equals("THETA")) {
-			theta = scanner.nextFloat();
+			fittingResult.theta = scanner.nextFloat();
 		} else if(key.equals("PHI")) {
-			phi = scanner.nextFloat();
+			fittingResult.phi = scanner.nextFloat();
 		}
 	}
 }

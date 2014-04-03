@@ -62,7 +62,7 @@ public class DCMainWindow {
 	
 	private GraphWindow graphWindow;
 	
-	private ArrayList<AllignmentMedium> media;
+	private ArrayList<AlignmentMedium> media;
 	private int lastSelectedMedium = 0;
 	private ProtSequence sequence;
 
@@ -70,8 +70,8 @@ public class DCMainWindow {
 	
 	DCMainWindow() throws IOException {
 		sequence = new ProtSequence("");
-		media = new ArrayList<AllignmentMedium>();
-		media.add(new AllignmentMedium("(default)"));
+		media = new ArrayList<AlignmentMedium>();
+		media.add(new AlignmentMedium("(default)"));
 		
 		mainFrame = new JFrame("DC GUI");
 		mainFrame.setBounds(300, 300, 500, 300);
@@ -160,7 +160,7 @@ public class DCMainWindow {
 				String name = (String)JOptionPane.showInputDialog(mainFrame, "Please enter medium name", "Alignment medium", JOptionPane.QUESTION_MESSAGE);
 				if(name==null || name.length()==0) return;
 				
-				AllignmentMedium medium = new AllignmentMedium(name);
+				AlignmentMedium medium = new AlignmentMedium(name);
 				media.add(medium);
 				refreshMediaPane();
 			}
@@ -215,7 +215,7 @@ public class DCMainWindow {
 					
 					// If we ended up without any media, then add (default) medium back
 					if(media.size() == 0)
-						media.add(new AllignmentMedium("(default)"));
+						media.add(new AlignmentMedium("(default)"));
 				} else if(node.getLevel() == 2) {  // An RDC set is selected
 					// Figure out which medium the set belongs to by finding the parent of the node.
 					DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
@@ -263,7 +263,7 @@ public class DCMainWindow {
 		else {
 			mediaTreeRoot.setUserObject("");
 			
-			for(AllignmentMedium medium: media) {
+			for(AlignmentMedium medium: media) {
 				mediumNode = new DefaultMutableTreeNode(medium.name, true);
 				mediaTreeRoot.add(mediumNode);
 				
@@ -390,7 +390,7 @@ public class DCMainWindow {
 		menuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				AllignmentMedium selectedMedium;
+				AlignmentMedium selectedMedium;
 				
 				if(media.size() > 1) {  // Only ask to select medium if there are more than one
 					RDCOutputSelectDialog dialog = new RDCOutputSelectDialog(mainFrame, media);
@@ -449,7 +449,7 @@ public class DCMainWindow {
 					return;
 				}
 				
-				AllignmentMedium selectedMedium, tempMedium;
+				AlignmentMedium selectedMedium, tempMedium;
 
 				if(setupDialog == null) setupDialog = new DCSetupDialog(mainFrame, media); // Only create setup dialog once
 				setupDialog.setVisible(true);
@@ -460,7 +460,7 @@ public class DCMainWindow {
 				if(setupDialog.doUseAllSets())
 					tempMedium = selectedMedium;
 				else {
-					tempMedium = new AllignmentMedium("temp");
+					tempMedium = new AlignmentMedium("temp");
 					int index = setupDialog.getSelectedSet();
 					tempMedium.addRDCSet(selectedMedium.get(index));
 				}
@@ -480,7 +480,7 @@ public class DCMainWindow {
 
 				int ret = dc.runDC();
 				
-				// Delete the temporary RDC table used for calculations
+				// Delete the temporary RDC file used for calculations
 				tempInput.delete();
 				
 				if(ret != 0) {
@@ -535,7 +535,7 @@ public class DCMainWindow {
 				// Create the temporary RDC input file
 				String tempInputName = "rdc_" + System.currentTimeMillis() + ".tab";
 				File tempInput = new File(tempInputName);
-				AllignmentMedium selectedMedium = media.get(0);  // TEMPORARY!
+				AlignmentMedium selectedMedium = media.get(0);  // TEMPORARY!
 				exportInDCFormat(tempInput, selectedMedium); 
 				
 				// Prepare DC wrapper
@@ -581,10 +581,10 @@ public class DCMainWindow {
 					out.load(dc.getResultFile(), selectedMedium);
 					dc.getResultFile().delete(); // Delete the DC result file
 					
-					Qfactors[i] = out.Qfactor;
-					rmsds[i] = out.rms;
+					Qfactors[i] = out.fittingResult.Qfactor;
+					rmsds[i] = out.fittingResult.rms;
 					
-					rMat = out.RotMatrix;
+					rMat = out.fittingResult.RotMatrix;
 					x.setTo(rMat[0][0], rMat[1][0], rMat[2][0]);
 					y.setTo(rMat[0][1], rMat[1][1], rMat[2][1]);
 					z.setTo(rMat[0][2], rMat[1][2], rMat[2][2]);
@@ -634,7 +634,7 @@ public class DCMainWindow {
 			ObjectInput input = new ObjectInputStream (buffer);
 			try {
 				pdbFile = (File)input.readObject();
-				media = (ArrayList<AllignmentMedium>)input.readObject();
+				media = (ArrayList<AlignmentMedium>)input.readObject();
 		    }
 		    finally {
 		    	input.close();
@@ -642,7 +642,7 @@ public class DCMainWindow {
 		    	picLabel3.setIcon(iconOK);
 		    	
 		    	// Find at least one non-empty RDC set, and use its sequence to update the current sequence
-		    	for(AllignmentMedium medium: media) {
+		    	for(AlignmentMedium medium: media) {
 		    		if(medium.getCount() > 0) {
 		    			sequence = medium.getRDCSets().get(0).getSequence();
 		    			break;
@@ -700,7 +700,7 @@ public class DCMainWindow {
 	}
 	
 	// Export all the RDC sets for the given alignment media in the full DC format
-	private void exportInDCFormat(File file, AllignmentMedium medium) {
+	private void exportInDCFormat(File file, AlignmentMedium medium) {
 		try {
 	    	Writer writer = new BufferedWriter(new FileWriter(file));
 	    	// Write out the necessary file header
@@ -753,7 +753,7 @@ public class DCMainWindow {
 
 				break;
 			case Full:
-				AllignmentMedium selectedMedium;
+				AlignmentMedium selectedMedium;
 				if(media.size() > 1) {  // Only ask to select medium if there are more than one
 					RDCOutputSelectDialog mediumDialog = new RDCOutputSelectDialog(mainFrame, media);
 					mediumDialog.setVisible(true);

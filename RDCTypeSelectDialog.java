@@ -22,11 +22,11 @@ import javax.swing.JTextArea;
 public class RDCTypeSelectDialog extends JDialog {
 	private int mediumIndex; // Used to return result of medium selection
 	private RDCType type;  // Used to return result of RDC type selection
-	private ArrayList<AllignmentMedium> media;
+	private ArrayList<AlignmentMedium> media;
 	private boolean selectionMade = false;
 	JComboBox comboType, comboMedium;
 	
-	public RDCTypeSelectDialog(JFrame owner, ArrayList<AllignmentMedium> media) {
+	public RDCTypeSelectDialog(JFrame owner, ArrayList<AlignmentMedium> media) {
 		super(owner, "RDC set info", true); // Create a modal dialog with title
 		
 		this.media = media;

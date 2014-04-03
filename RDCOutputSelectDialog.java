@@ -17,11 +17,11 @@ import javax.swing.JPanel;
 
 public class RDCOutputSelectDialog extends JDialog {
 	private int mediumIndex; // Used to return result of medium selection
-	private ArrayList<AllignmentMedium> media;
+	private ArrayList<AlignmentMedium> media;
 	private boolean selectionMade = false;
 	JComboBox comboMedium;
 	
-	public RDCOutputSelectDialog(JFrame owner, ArrayList<AllignmentMedium> media) {
+	public RDCOutputSelectDialog(JFrame owner, ArrayList<AlignmentMedium> media) {
 		super(owner, "Select medium", true); // Create a modal dialog with title
 		
 		this.media = media;

@@ -39,13 +39,15 @@ public class DCOutputDialog extends JDialog implements WindowListener {
 		JPanel contentPane = (JPanel)getContentPane();
 		contentPane.setBorder(BorderFactory.createEmptyBorder(10,30,15,30));
 		
-		JLabel label = new JLabel(String.format("Q-factor %.3f, Rcorr %.3f, rms %.3f\n", dcOut.Qfactor, dcOut.Rcorr, dcOut.rms));
+		FittingResult result = dcOut.fittingResult;
+		
+		JLabel label = new JLabel(String.format("Q-factor %.3f, Rcorr %.3f, rms %.3f\n", result.Qfactor, result.Rcorr, result.rms));
 		label.setAlignmentX(CENTER_ALIGNMENT);
 		contentPane.add(label);
 
 		contentPane.add(Box.createRigidArea(new Dimension(0, 5)));
 		
-		label = new JLabel(String.format("Da %.3f, Rh %.3f\n", dcOut.Da, dcOut.Rh));
+		label = new JLabel(String.format("Da %.3f, Rh %.3f\n", result.Da, result.Rh));
 		label.setAlignmentX(CENTER_ALIGNMENT);
 		contentPane.add(label);
 	

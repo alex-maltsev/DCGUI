@@ -27,7 +27,7 @@ import javax.swing.JTextField;
 public class DCSetupDialog extends JDialog {
 	private static final long serialVersionUID = -3374569389699929123L;
 	private int mediumIndex; // Used to return result of medium selection
-	private ArrayList<AllignmentMedium> media;
+	private ArrayList<AlignmentMedium> media;
 	private boolean setupCompleted = false;
 	private JComboBox comboMedium, comboSets;
 	private JCheckBox cbUseAll, cbDa, cbRh, cbOrientation;
@@ -37,7 +37,7 @@ public class DCSetupDialog extends JDialog {
 	private float Da, Rh, psi, theta, phi;
 	private boolean fixDa = false, fixRh = false, fixOrientation = false;
 	
-	public DCSetupDialog(JFrame owner, ArrayList<AllignmentMedium> media) {
+	public DCSetupDialog(JFrame owner, ArrayList<AlignmentMedium> media) {
 		super(owner, "Setup calculation", true); // Create a modal dialog with title
 		
 		this.media = media;
@@ -74,7 +74,7 @@ public class DCSetupDialog extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				mediumIndex = comboMedium.getSelectedIndex();
-				AllignmentMedium medium = DCSetupDialog.this.media.get(mediumIndex);
+				AlignmentMedium medium = DCSetupDialog.this.media.get(mediumIndex);
 				String [] setTypes = new String[medium.getCount()];
 				for(int i=0; i<medium.getCount(); i++) {
 					setTypes[i] = medium.get(i).getTypeString();
@@ -103,7 +103,7 @@ public class DCSetupDialog extends JDialog {
 		
 		mainPane.add(cbUseAll, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 
-		AllignmentMedium medium = media.get(0);
+		AlignmentMedium medium = media.get(0);
 		String [] setTypes = new String[medium.getCount()];
 		for(int i=0; i<medium.getCount(); i++) {
 			setTypes[i] = medium.get(i).getTypeString();
@@ -150,9 +150,9 @@ public class DCSetupDialog extends JDialog {
 					return;
 				}
 
-				fieldPsi.setText(String.valueOf(out.psi));
-				fieldTheta.setText(String.valueOf(out.theta));
-				fieldPhi.setText(String.valueOf(out.phi));
+				fieldPsi.setText(String.valueOf(out.fittingResult.psi));
+				fieldTheta.setText(String.valueOf(out.fittingResult.theta));
+				fieldPhi.setText(String.valueOf(out.fittingResult.phi));
 			}
 		});
 		

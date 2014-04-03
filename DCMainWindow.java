@@ -14,6 +14,8 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
+import javax.swing.event.TreeModelEvent;
+import javax.swing.event.TreeModelListener;
 import javax.swing.filechooser.FileFilter;
 
 import java.io.BufferedInputStream;
@@ -170,6 +172,8 @@ public class DCMainWindow {
 	    mediaTree.setEditable(true);
 	    mediaTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 	    mediaTree.setRootVisible(false);
+
+		mediaTree.getModel().addTreeModelListener(new RDCTreeListener());
 	    
 		JScrollPane scrollPane = new JScrollPane(mediaTree);
 		pane.add(scrollPane, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0, 20, 0, 0), 0, 0));
@@ -238,17 +242,21 @@ public class DCMainWindow {
 		graphWindow = new GraphWindow(this);
 	}
 	
+	
+	// Can be used by child windows to decide how to position themselves
 	public Rectangle getBounds() {
 		return mainFrame.getBounds();
 	}
 	
+	
+	// Draws the tree structure for alignment media and their RDC types
 	private void refreshMediaPane() {
 		DefaultTreeModel treeModel = (DefaultTreeModel) mediaTree.getModel();
 		DefaultMutableTreeNode mediumNode = null, setNode = null;
 		int setsCount = 0; // Used to count currently present RDC sets
 		
 		mediaTreeRoot.removeAllChildren();
-		if(media.size() == 0) {
+		if(media.size() == 0) { 
 			mediumNode = new DefaultMutableTreeNode("(no media)", true);
 			mediaTreeRoot.add(mediumNode);
 		}
@@ -271,7 +279,7 @@ public class DCMainWindow {
 					}
 				}
 			}		
-		}
+		} 
 		
 		// Make sure that the icon correctly reflects whether any RDC sets are present
 		if(setsCount > 0)
@@ -987,6 +995,45 @@ public class DCMainWindow {
 		new DCMainWindow();
 	}
 
+	private class RDCTreeListener implements TreeModelListener {
+		@Override
+		public void treeNodesChanged(TreeModelEvent e) {
+			DefaultMutableTreeNode node;
+	        node = (DefaultMutableTreeNode)(e.getTreePath().getLastPathComponent());
+
+	        // Get to the edited node
+	        try {
+	            int index = e.getChildIndices()[0];
+	            node = (DefaultMutableTreeNode)(node.getChildAt(index));
+	        } catch (NullPointerException exc) {} 
+
+	        if(node.getLevel() == 2) {  // If a set was edited, revert back to its proper name
+				// Figure out which medium the set belongs to by finding the parent of the node.
+				DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
+				int mediumIndex = mediaTreeRoot.getIndex(parent); // Get the index of the medium
+				int setIndex = parent.getIndex(node); // Get the index of RDC set
+
+				if(media.get(mediumIndex).getCount() > 0)
+					node.setUserObject(media.get(mediumIndex).get(setIndex).getTypeString());
+				else
+					node.setUserObject("(no data)");
+	        }
+	        else {  // When medium name was edited, save that new name into the correct medium
+				int index = mediaTreeRoot.getIndex(node); // Get the index of the medium
+				media.get(index).name = (String)(node.getUserObject());
+	        }
+		}
+
+		@Override
+		public void treeNodesInserted(TreeModelEvent arg0) { }
+
+		@Override
+		public void treeNodesRemoved(TreeModelEvent arg0) { }
+
+		@Override
+		public void treeStructureChanged(TreeModelEvent arg0) { }
+	};
+	
 	// Filter class for showing only files with extension "state" in a FileChooser
 	public class StateFilter extends FileFilter {
 		private String getExtension(File f) {

@@ -32,6 +32,8 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
@@ -150,7 +152,7 @@ public class DataEditDialog extends JDialog implements TableModelListener, Actio
 		BufferedImage img = new BufferedImage(10, 10, BufferedImage.TYPE_INT_RGB);
 		Graphics2D g = img.createGraphics();
 		g.setPaint(Color.green);
-		Rectangle rect = new Rectangle(10, 10);
+		Rectangle rect = new Rectangle(1, 1, 8, 8);
 		g.fill(rect);
 		iconGood = new ImageIcon(img);
 
@@ -182,10 +184,30 @@ public class DataEditDialog extends JDialog implements TableModelListener, Actio
 		table.setFillsViewportHeight(true);
 		table.getModel().addTableModelListener(this);
 
+		// Force the data to be displayed with three digits after the decimal point
 		TableColumnModel m = table.getColumnModel();
-		m.getColumn(2).setCellRenderer(new MyNumberRenderer(3));
-		m.getColumn(3).setCellRenderer(new MyNumberRenderer(3));
-		m.getColumn(4).setCellRenderer(new MyNumberRenderer(3));
+		MyNumberRenderer numberRenderer = new MyNumberRenderer(3);
+		m.getColumn(2).setCellRenderer(numberRenderer);
+		m.getColumn(3).setCellRenderer(numberRenderer);
+		m.getColumn(4).setCellRenderer(numberRenderer);
+		
+		// Set the column widths
+	//	m.getColumn(0).setPreferredWidth(50);
+	//	m.getColumn(1).setPreferredWidth(60);
+	//	m.getColumn(5).setPreferredWidth(60);
+		m.getColumn(0).setMinWidth(50);
+		m.getColumn(0).setMaxWidth(50);
+		m.getColumn(1).setMinWidth(70);
+		m.getColumn(1).setMaxWidth(70);
+		m.getColumn(5).setMinWidth(70);
+		m.getColumn(5).setMaxWidth(70);
+
+		
+		
+		// Center the table headers
+		TableCellRenderer headerRenderer = table.getTableHeader().getDefaultRenderer();
+		JLabel headerLabel = (JLabel) headerRenderer;
+		headerLabel.setHorizontalAlignment(JLabel.CENTER);
 		
 		this.add(scrollPane);
 	}
@@ -210,9 +232,9 @@ public class DataEditDialog extends JDialog implements TableModelListener, Actio
 				tableData[i][3] = new Float(rdc.predValue);
 				
 				// Chose the icon based on how much the predicted and observed RDC differ
-				if(Math.abs(rdc.predValue - rdc.value) < rdc.uncert)
+				if(Math.abs(rdc.predValue - rdc.value) < 1.5*rdc.uncert)
 					tableData[i][5] = iconGood;
-				else if(Math.abs(rdc.predValue - rdc.value) > 3*rdc.uncert)
+				else if(Math.abs(rdc.predValue - rdc.value) > 4*rdc.uncert)
 					tableData[i][5] = iconBad;
 				else
 					tableData[i][5] = iconFair;

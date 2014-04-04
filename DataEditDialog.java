@@ -3,7 +3,9 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Frame;
+import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -43,10 +45,11 @@ public class DataEditDialog extends JDialog implements TableModelListener, Actio
 
 	public boolean hadSetupProblems = false;
 	
-	private static final String[] columnNames = {"Used", "Residue", "RDC (Hz)", "Error (Hz)" };
-	private static final int colCount = 4;
+	private static final String[] columnNames = {"Used", "Residue", "RDC (Hz)", "Predicted (Hz)", "Uncert (Hz)", "Quality" };
+	private static final int colCount = 6;
 	private JTable table;
 	private Object[][] tableData;
+	private ImageIcon iconGood, iconFair, iconBad, iconNone;
 	
 	private JButton prevMedium, nextMedium, prevType, nextType;
 	private JLabel mediumName, typeName;
@@ -140,7 +143,38 @@ public class DataEditDialog extends JDialog implements TableModelListener, Actio
 		topPane.add(typeName);
 		topPane.add(nextType);
 		this.add(topPane, BorderLayout.NORTH);
-				
+		
+		
+		// Prepare icons to be used for indicating the quality of RDCs
+		// Good quality
+		BufferedImage img = new BufferedImage(10, 10, BufferedImage.TYPE_INT_RGB);
+		Graphics2D g = img.createGraphics();
+		g.setPaint(Color.green);
+		Rectangle rect = new Rectangle(10, 10);
+		g.fill(rect);
+		iconGood = new ImageIcon(img);
+
+		// Fair quality
+		img = new BufferedImage(10, 10, BufferedImage.TYPE_INT_RGB);
+		g = img.createGraphics();
+		g.setPaint(Color.yellow);
+		g.fill(rect);
+		iconFair = new ImageIcon(img);
+
+		// Bad quality
+		img = new BufferedImage(10, 10, BufferedImage.TYPE_INT_RGB);
+		g = img.createGraphics();
+		g.setPaint(Color.red);
+		g.fill(rect);
+		iconBad = new ImageIcon(img);
+		
+		// Empty icon
+		img = new BufferedImage(10, 10, BufferedImage.TYPE_INT_RGB);
+		g = img.createGraphics();
+		g.setPaint(Color.white);
+		g.fill(rect);
+		iconNone = new ImageIcon(img);
+
 		prepareTableData();
 
 		table = new JTable(new MyTableModel());
@@ -151,9 +185,8 @@ public class DataEditDialog extends JDialog implements TableModelListener, Actio
 		TableColumnModel m = table.getColumnModel();
 		m.getColumn(2).setCellRenderer(new MyNumberRenderer(3));
 		m.getColumn(3).setCellRenderer(new MyNumberRenderer(3));
+		m.getColumn(4).setCellRenderer(new MyNumberRenderer(3));
 		
-	//	table.removeColumn(table.getColumn("Error (Hz)"));
-
 		this.add(scrollPane);
 	}
 
@@ -171,7 +204,23 @@ public class DataEditDialog extends JDialog implements TableModelListener, Actio
 			tableData[i][0] = new Boolean(rdc.isUsed);
 			tableData[i][1] = new Integer(rdc.resNum);
 			tableData[i][2] = new Float(rdc.value);
-			tableData[i][3] = new Float(rdc.uncert);
+			tableData[i][4] = new Float(rdc.uncert);
+			
+			if(rdc.wasPredicted) {
+				tableData[i][3] = new Float(rdc.predValue);
+				
+				// Chose the icon based on how much the predicted and observed RDC differ
+				if(Math.abs(rdc.predValue - rdc.value) < rdc.uncert)
+					tableData[i][5] = iconGood;
+				else if(Math.abs(rdc.predValue - rdc.value) > 3*rdc.uncert)
+					tableData[i][5] = iconBad;
+				else
+					tableData[i][5] = iconFair;
+			}
+			else {
+				tableData[i][3] = null;
+				tableData[i][5] = iconNone; // empty icon
+			}
 		}
 	}
 
@@ -225,7 +274,6 @@ public class DataEditDialog extends JDialog implements TableModelListener, Actio
 		prepareTableData();
 		table.invalidate();
 		table.repaint();
-	//	((MyTableModel)table.getModel()).fireTableDataChanged();
 		
 		updateNavigation();
 	}
@@ -239,14 +287,16 @@ public class DataEditDialog extends JDialog implements TableModelListener, Actio
         int column = e.getColumn();
         RDC rdc = curSet.get(row);
         Object data = tableData[row][column];
-       // MyTableModel model = (MyTableModel)e.getSource();
-       // Object data = model.getValueAt(row, column);
+
         switch(column) {
         case 0:
-        	rdc.isUsed = (Boolean)data; break;
+        	rdc.isUsed = (Boolean)data; 
+        	if(!rdc.isUsed)
+        		rdc.wasPredicted = false;
+        	break;
         case 2:
         	rdc.value = (Float)data; break;
-        case 3:
+        case 4:
         	rdc.uncert = (Float)data; break;
         }
 
@@ -275,7 +325,8 @@ public class DataEditDialog extends JDialog implements TableModelListener, Actio
 	    }
 
 	    public boolean isCellEditable(int row, int col) {
-	        if (col == 1) {
+	    	// Residue number and predicted RDC are not editable
+	        if (col == 1 || col == 3) {
 	            return false;
 	        } else {
 	            return true;

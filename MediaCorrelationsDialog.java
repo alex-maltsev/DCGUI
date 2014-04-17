@@ -1,4 +1,5 @@
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Point;
 import java.text.DecimalFormat;
@@ -10,6 +11,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JViewport;
 import javax.swing.SwingConstants;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -24,20 +26,24 @@ public class MediaCorrelationsDialog extends JDialog {
 	private int colCount;
 	private JTable table;
 	private Object[][] tableData;
+	JScrollPane scrollPane;
+
+	// Constants used to dynamically resize the dialog depending on the content
+	private static final int BORDER_WIDTH = 10;
+	private static final int COLUMN_WIDTH = 80;
+	private static final int ROW_HEIGHT = 25;
+	private static final int EXTRA_HEIGHT = 5;
+	private static final int EXTRA_WIDTH = 5;
+	private static final int SCROLL_BAR_HEIGHT = 20;
+	private static final int MAX_DIALOG_WIDTH = 500;
 
 	public MediaCorrelationsDialog(Frame owner, ArrayList<AlignmentMedium> media) {
 		super(owner, "Media correlations", true);
 		
 		this.media = media;
-		
-		
-		Point loc = owner.getLocation();
-		loc.x += 50;
-		loc.y += 50;
-		this.setLocation(loc);
-		this.setSize(400, 300);
+				
 		JPanel contentPane = (JPanel)getContentPane();
-		contentPane.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+		contentPane.setBorder(BorderFactory.createEmptyBorder(BORDER_WIDTH, BORDER_WIDTH, BORDER_WIDTH, BORDER_WIDTH));
 		
 		// Init table column names with media names
 		// Leaving the first name empty
@@ -50,15 +56,32 @@ public class MediaCorrelationsDialog extends JDialog {
 		prepareTableData();
 		
 		table = new JTable(new CorrelationsTableModel());
-		JScrollPane scrollPane = new JScrollPane(table);
-		//table.setFillsViewportHeight(true);
+		scrollPane = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+	//	table.setFillsViewportHeight(true);
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
 		// Force the data to be displayed with three digits after the decimal point
+		// Set the column widths
 		TableColumnModel m = table.getColumnModel();
 		CellRenderer renderer = new CellRenderer(3);
-		for(int i=0; i<media.size(); i++)
-			m.getColumn(i+1).setCellRenderer(renderer);
+		for(int i=0; i<=media.size(); i++) {
+			m.getColumn(i).setCellRenderer(renderer);
+			m.getColumn(i).setMinWidth(COLUMN_WIDTH);
+			m.getColumn(i).setMaxWidth(COLUMN_WIDTH);
+		}
 
+		// Set the row height or all rows
+		table.setRowHeight(ROW_HEIGHT);
+		
+		scrollPane.setColumnHeader(new JViewport() {
+		      @Override 
+		      public Dimension getPreferredSize() {
+		        Dimension d = super.getPreferredSize();
+		        d.height = ROW_HEIGHT;
+		        return d;
+		      }
+		    });
+		
 		// Center the table headers
 		TableCellRenderer headerRenderer = table.getTableHeader().getDefaultRenderer();
 		JLabel headerLabel = (JLabel) headerRenderer;
@@ -72,8 +95,29 @@ public class MediaCorrelationsDialog extends JDialog {
 		table.setGridColor(Color.lightGray);
 		
 		contentPane.add(scrollPane);
+		
+		// Size and position the dialog appropriately
+		Point loc = owner.getLocation();
+		loc.x += 50;
+		loc.y += 50;
+		this.setLocation(loc);
+		
+		// Calculated the scroll pane width and height to accommodate the table without scrolling
+		int width = (1 + media.size())*COLUMN_WIDTH + EXTRA_WIDTH;
+		int height = (1 + media.size())*ROW_HEIGHT + EXTRA_HEIGHT;
+		
+		// If the required width is too large then cap it at the maximum value
+		if(width > MAX_DIALOG_WIDTH) {
+			width = MAX_DIALOG_WIDTH;
+			height += SCROLL_BAR_HEIGHT; // Compensate for the appearance of the horizontal scroll bar
+		}
+				
+		scrollPane.setPreferredSize(new Dimension(width, height));
+		
+		this.pack();
 	}
 	
+		
 	private void prepareTableData() {
 		int rowCount = media.size();
 		

@@ -511,6 +511,20 @@ public class DCMainWindow {
 		
 		menu.add(menuItem);
 		
+		
+		menuItem = new JMenuItem("Media correlations");
+		menuItem.addActionListener(new ActionListener(){
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				MediaCorrelationsDialog dialog = new MediaCorrelationsDialog(mainFrame, media);
+				dialog.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				dialog.setVisible(true);				
+			}});
+		
+		menu.add(menuItem);
+		
+		
 		menuItem = new JMenuItem("NH structural noise");
 		menuItem.addActionListener(new ActionListener() {
 			@Override

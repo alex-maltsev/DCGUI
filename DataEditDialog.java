@@ -191,18 +191,14 @@ public class DataEditDialog extends JDialog implements TableModelListener, Actio
 		m.getColumn(3).setCellRenderer(numberRenderer);
 		m.getColumn(4).setCellRenderer(numberRenderer);
 		
-		// Set the column widths
-	//	m.getColumn(0).setPreferredWidth(50);
-	//	m.getColumn(1).setPreferredWidth(60);
-	//	m.getColumn(5).setPreferredWidth(60);
+		// Set the column widths to be fixed for columns: Used, Residue, and Quality.
+		// The other three columns will resize, when the dialog is resized.
 		m.getColumn(0).setMinWidth(50);
 		m.getColumn(0).setMaxWidth(50);
 		m.getColumn(1).setMinWidth(70);
 		m.getColumn(1).setMaxWidth(70);
 		m.getColumn(5).setMinWidth(70);
-		m.getColumn(5).setMaxWidth(70);
-
-		
+		m.getColumn(5).setMaxWidth(70);		
 		
 		// Center the table headers
 		TableCellRenderer headerRenderer = table.getTableHeader().getDefaultRenderer();

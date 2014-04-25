@@ -90,24 +90,13 @@ public class DataEditDialog extends JDialog implements TableModelListener, Actio
 		contentPane.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
 
 		// Try to load arrow images to use on next/previous buttons
-		try {
-			BufferedImage leftArrowImage = ImageIO.read(new File("dcgui_left_arrow.png"));
-			ImageIcon leftArrowIcon = new ImageIcon(leftArrowImage);
-			BufferedImage rightArrowImage = ImageIO.read(new File("dcgui_right_arrow.png"));
-			ImageIcon rightArrowIcon = new ImageIcon(rightArrowImage);
-			
-			prevMedium = new JButton(leftArrowIcon);
-			nextMedium = new JButton(rightArrowIcon);
-			prevType = new JButton(leftArrowIcon);
-			nextType = new JButton(rightArrowIcon);
-
-		} catch(IOException ex) {
-			// If load fails then just make the buttons show + and -
-			prevMedium = new JButton("-");
-			nextMedium = new JButton("+");
-			prevType = new JButton("-");
-			nextType = new JButton("+");
-		}
+		ImageIcon leftArrowIcon = new ImageIcon(ResourceLoader.getURL("images/dcgui_left_arrow.png"));
+		ImageIcon rightArrowIcon = new ImageIcon(ResourceLoader.getURL("images/dcgui_right_arrow.png"));
+		
+		prevMedium = new JButton(leftArrowIcon);
+		nextMedium = new JButton(rightArrowIcon);
+		prevType = new JButton(leftArrowIcon);
+		nextType = new JButton(rightArrowIcon);
 		
 
 		Dimension buttonDim = new Dimension(30, 30);

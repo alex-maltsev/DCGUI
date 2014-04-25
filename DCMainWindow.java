@@ -35,6 +35,7 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -51,7 +52,6 @@ public class DCMainWindow {
 	private JTree mediaTree;
 	private DefaultMutableTreeNode mediaTreeRoot;
 	
-	private BufferedImage imageOK, imageStop, imageWarning;
 	private ImageIcon iconOK, iconStop, iconWarning;
 	private JLabel picLabel1, picLabel2, picLabel3;
 	private final JFileChooser browseDialog = new JFileChooser();
@@ -79,10 +79,8 @@ public class DCMainWindow {
 		initMenu();
 		initDragAndDrop();
 
-		imageOK = ImageIO.read(new File("icon-complete.png"));
-		iconOK = new ImageIcon(imageOK);
-		imageStop = ImageIO.read(new File("icon-stop.png"));
-		iconStop = new ImageIcon(imageStop);
+		iconOK = new ImageIcon(ResourceLoader.getURL("images/icon-complete.png"));
+		iconStop = new ImageIcon(ResourceLoader.getURL("images/icon-stop.png"));
 
 		GridBagLayout thisLayout = new GridBagLayout();
 		thisLayout.rowWeights = new double[] {0.1, 0.1, 0.1, 2.0, 0.1};
@@ -97,7 +95,7 @@ public class DCMainWindow {
 		pane.add(label, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 20, 0, 0), 0, 0));
 			
 		picLabel1 = new JLabel(iconStop);
-		picLabel1.setSize(imageOK.getWidth(), imageOK.getHeight());	
+	//	picLabel1.setSize(iconOK.getIconWidth(), iconOK.getIconHeight());	
 		pane.add(picLabel1, new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 
 		JButton button = new JButton("Edit...");
@@ -122,7 +120,7 @@ public class DCMainWindow {
 		pane.add(label, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 20, 0, 0), 0, 0));
 		
 		picLabel2 = new JLabel(iconStop);
-		picLabel2.setSize(imageStop.getWidth(), imageStop.getHeight());
+	//	picLabel2.setSize(iconOK.getIconWidth(), iconOK.getIconHeight());	
 		pane.add(picLabel2, new GridBagConstraints(1, 1, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 		
 		button = new JButton("Browse");
@@ -149,7 +147,7 @@ public class DCMainWindow {
 		pane.add(label, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 20, 0, 0), 0, 0));
 		
 		picLabel3 = new JLabel(iconStop);
-		picLabel3.setSize(imageStop.getWidth(), imageStop.getHeight());
+	//	picLabel3.setSize(iconOK.getIconWidth(), iconOK.getIconHeight());	
 		pane.add(picLabel3, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 
 		button = new JButton("Add medium");
@@ -242,7 +240,7 @@ public class DCMainWindow {
 		graphWindow = new GraphWindow(this);
 	}
 	
-	
+		
 	// Can be used by child windows to decide how to position themselves
 	public Rectangle getBounds() {
 		return mainFrame.getBounds();
@@ -317,7 +315,7 @@ public class DCMainWindow {
 
 		initFileMenu(menuBar);  // 'File'
 		
-		initSettingsMenu(menuBar); // 'Settings'
+	//	initSettingsMenu(menuBar); // 'Settings'
 		
 		initCalculationsMenu(menuBar); // 'Calculations'
 

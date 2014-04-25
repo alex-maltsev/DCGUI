@@ -94,20 +94,11 @@ public class GraphWindow extends JFrame {
 		controlsPane.add(cbUseAll);
 
 		// Try to load arrow images to use on next/previous buttons
-		try {
-			BufferedImage leftArrowImage = ImageIO.read(new File("dcgui_left_arrow.png"));
-			ImageIcon leftArrowIcon = new ImageIcon(leftArrowImage);
-			BufferedImage rightArrowImage = ImageIO.read(new File("dcgui_right_arrow.png"));
-			ImageIcon rightArrowIcon = new ImageIcon(rightArrowImage);
+		ImageIcon leftArrowIcon = new ImageIcon(ResourceLoader.getURL("images/dcgui_left_arrow.png"));
+		ImageIcon rightArrowIcon = new ImageIcon(ResourceLoader.getURL("images/dcgui_right_arrow.png"));
 			
-			prevType = new JButton(leftArrowIcon);
-			nextType = new JButton(rightArrowIcon);
-
-		} catch(IOException ex) {
-			// If load fails then just make the buttons show + and -
-			prevType = new JButton("-");
-			nextType = new JButton("+");
-		}
+		prevType = new JButton(leftArrowIcon);
+		nextType = new JButton(rightArrowIcon);
 
 		Dimension buttonDim = new Dimension(30, 30);
 		prevType.setPreferredSize(buttonDim);

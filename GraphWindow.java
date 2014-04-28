@@ -66,10 +66,6 @@ public class GraphWindow extends JFrame {
 		
 		setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 		
-		// Position the window to the right of the parent window
-		Rectangle parentBounds = parent.getBounds();		
-		setBounds(parentBounds.x + parentBounds.width + 40, parentBounds.y - 50, 400, 400);
-		
 		this.setLayout(new BoxLayout(this.getContentPane(), BoxLayout.Y_AXIS));
 		
 		controlsPane = new JPanel();		
@@ -149,6 +145,20 @@ public class GraphWindow extends JFrame {
 		
 	//	contentPane.add(graphPane);
 	}
+	
+	
+	@Override
+	public void setVisible(boolean flag) {
+		// If the window is being made visible, and is currently invisible
+		// then position the window to the right of the parent window
+		if(flag && !this.isVisible()) {
+			Rectangle parentBounds = parent.getBounds();		
+			setBounds(parentBounds.x + parentBounds.width + 40, parentBounds.y - 50, 400, 400);			
+		}
+		
+		super.setVisible(flag);
+	}
+	
 	
 	public void setRDCSets(ArrayList<RDCSet> sets) {
 		this.sets = sets;

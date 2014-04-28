@@ -5,9 +5,10 @@ public enum RDCType implements Serializable {
 	NH("NH", "N", "HN", 0, -21585.20, 1.000),
 	CAHA("CAHA", "CA", "HA", 0, 44539.47, 1.000),
 	CACO("CACO", "CA", "C", 0, 4284.77, 0.200),
-	CACB("CACB", "CA", "CB", 0, 4200.00, 0.200), // Notice that coupling constant varies for this type!
 	NCO("NCO", "C", "N", 1, -2609.05, 0.125),
-	HNCO("HNCO", "C", "HN", 1, 6666.07, 0.333);
+	HNCO("HNCO", "C", "HN", 1, 6666.07, 0.333),
+	CACB("CACB", "CA", "CB", 0, 4200.00, 0.200), // Notice that coupling constant varies for this type!
+	CBCG("CBCG", "CB", "CG", 0, 4285.00, 0.200);
 
 	String name;	 // String representation of the type name
 	String atom1, atom2;

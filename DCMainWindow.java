@@ -827,10 +827,7 @@ public class DCMainWindow {
 					if(scanner.hasNextFloat()) {
 						rdcValue = scanner.nextFloat();
 					//	System.out.printf("res - %d, value - %f\n", resNum, rdcValue);
-						if(rdcType.isSimple)
-							rdcSet.addRDC(resNum, rdcValue);
-						else
-							rdcSet.addRDC(resNum, rdcValue, rdcType.atom1, rdcType.atom2);
+						rdcSet.addRDC(resNum, rdcValue);
 					} else
 						continue; // Something weird - go for the next line
 				} else
@@ -859,7 +856,7 @@ public class DCMainWindow {
 		int atom1Res, atom2Res;
 		String atom1Type, atom2Type, res1Type, res2Type;
 		Pattern resNamePattern = Pattern.compile("\\w\\w\\w");
-		Pattern atomNamePattern = Pattern.compile("(\\w)+");
+		Pattern atomNamePattern = Pattern.compile("[\\w#]+");
 		RDCType rdcType;
 		
 		HashMap<RDCType, RDCSet> sets = new HashMap<RDCType, RDCSet>();
@@ -921,7 +918,11 @@ public class DCMainWindow {
 					sets.put(rdcType, curSet);
 				}
 				
-				curSet.addRDC(resNum, rdcValue, uncertValue);
+				// Only save the atom types into RDC itself if the detected RDC type is NOT simple
+				if(rdcType.isSimple)
+					curSet.addRDC(resNum, rdcValue, uncertValue);
+				else
+					curSet.addRDC(resNum, rdcValue, uncertValue, atom1Type, atom2Type); // Note: Relying on both atoms being on the same residue!
 			}
 			
 			br.close();

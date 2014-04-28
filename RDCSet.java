@@ -44,19 +44,20 @@ public class RDCSet implements Serializable {
 		rdcs.add(rdc);
 	}
 	
-	public void addRDC(int resNum, float value, String atom1, String atom2) {
-		RDC rdc = new RDC(resNum, value);
-		rdc.atom1 = atom1;
-		rdc.atom2 = atom2;
-		rdcs.add(rdc);
-	}
-	
 	public void addRDC(int resNum, float value, float uncert) {
 		RDC rdc = new RDC(resNum, value);
 		rdc.uncert = uncert;
 		rdcs.add(rdc);
 	}
-	
+
+	public void addRDC(int resNum, float value, float uncert, String atom1, String atom2) {
+		RDC rdc = new RDC(resNum, value);
+		rdc.atom1 = atom1;
+		rdc.atom2 = atom2;
+		rdc.uncert = uncert;
+		rdcs.add(rdc);
+	}
+
 	public void addRDC(RDC rdc) {
 		rdcs.add(rdc);
 	}
@@ -96,9 +97,17 @@ public class RDCSet implements Serializable {
 				aaCode2 = seq.getAACodeAt(rdc.resNum + type.resNumDelta).toUpperCase();
 			}
 			
-			String atom1 = type.atom1, atom2 = type.atom2;
+			String atom1, atom2;
+			if(type.isSimple)
+			{
+				atom1 = type.atom1; atom2 = type.atom2;
+			}
+			else
+			{
+				atom1 = rdc.atom1; atom2 = rdc.atom2;
+			}
+			
 			float weight = 1.0f / rdc.uncert;
-			if(type == RDCType.CAHA && aaCode1.equals("GLY")) atom2 = "HA#"; // Handle the special case of HA for Gly
 			
 			String temp;
 			temp = String.format("%5d %6s %6s", rdc.resNum, aaCode1, atom1);

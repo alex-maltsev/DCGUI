@@ -12,6 +12,10 @@ public class RDC implements Serializable {
 	boolean isUsed; // Flag showing whether this RDC is to be used in fitting
 	boolean wasPredicted;
 	
+	// The names of atoms involved in the RDC.
+	// Particularly important when loading unusual RDCs from a 'full' input file.
+	String atom1, atom2; 
+	
 	RDC(int resNum, float value) {
 		this.resNum = resNum;
 		this.value = value;

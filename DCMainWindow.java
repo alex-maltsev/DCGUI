@@ -756,9 +756,9 @@ public class DCMainWindow {
 				lastSelectedMedium = mediumIndex; // Memorize selected medium
 				RDCType selectedType = dialog.getSelectedType();
 				
-				testSet = parseSimpleInput(file);
+				testSet = parseSimpleInput(file, selectedType);
 				testSet.setSequence(sequence);
-				testSet.setType(selectedType);
+			//	testSet.setType(selectedType);
 				media.get(mediumIndex).addRDCSet(testSet);
 										
 				refreshMediaPane();
@@ -805,13 +805,18 @@ public class DCMainWindow {
 		
 	}
 	
-	private RDCSet parseSimpleInput(File file) {
+	
+	// The function takes the file to be parsed, and the RDCType to be used.
+	// Reads in data, sets up RDC objects, and saves them into a new set.
+	// If everything went well, returns the newly created RDC set
+	private RDCSet parseSimpleInput(File file, RDCType rdcType) {
 		BufferedReader br;
 		String line;
 		Scanner scanner;
 		int resNum;
 		float rdcValue;
 		RDCSet rdcSet = new RDCSet();
+		rdcSet.setType(rdcType);
 		
 		try {
 			br = new BufferedReader(new FileReader(file));
@@ -822,8 +827,10 @@ public class DCMainWindow {
 					if(scanner.hasNextFloat()) {
 						rdcValue = scanner.nextFloat();
 					//	System.out.printf("res - %d, value - %f\n", resNum, rdcValue);
-						
-						rdcSet.addRDC(resNum, rdcValue);
+						if(rdcType.isSimple)
+							rdcSet.addRDC(resNum, rdcValue);
+						else
+							rdcSet.addRDC(resNum, rdcValue, rdcType.atom1, rdcType.atom2);
 					} else
 						continue; // Something weird - go for the next line
 				} else
@@ -831,7 +838,6 @@ public class DCMainWindow {
 			}
 			br.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}
@@ -900,23 +906,11 @@ public class DCMainWindow {
 			//	System.out.printf("%d %s %s %d %s %s %.3f %.3f\n", atom1Res, res1Type, atom1Type, atom2Res, res2Type, atom2Type, rdcValue, uncertValue);
 
 				// Figure out the RDC type, and the corresponding residue number
-				if(atom1Res <= atom2Res) {
-					resNum = atom1Res;
-					rdcType = RDCType.RDCTypeFromAtoms(atom1Type, atom2Type);
-					// In case when both atoms are on the same residue we may still have a problem
-					if(rdcType == null)
-						rdcType = RDCType.RDCTypeFromAtoms(atom2Type, atom1Type);
-					
-					// In case we are still not getting a RDCType, it means that it's an unknown RDC Type.
-					// Bail here and possibly let the user know that there is a problem
-					if(rdcType == null) continue;
-				} else {
-					resNum = atom2Res;
-					rdcType = RDCType.RDCTypeFromAtoms(atom2Type, atom1Type);
-					
-					// If we are not getting a RDCType, it means that it's an unknown RDC Type. Bail.
-					if(rdcType == null) continue;					
-				}
+				rdcType = RDCTypeRecognizer.recognize(atom1Res, atom1Type, atom2Res, atom2Type);
+				resNum = RDCTypeRecognizer.getResNum();
+				
+				// If we are not getting a RDCType, it means that it's an unknown RDC Type. Bail.
+				if(rdcType == null) continue;					
 				
 				if(sets.containsKey(rdcType))
 					curSet = sets.get(rdcType);

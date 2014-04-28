@@ -44,6 +44,13 @@ public class RDCSet implements Serializable {
 		rdcs.add(rdc);
 	}
 	
+	public void addRDC(int resNum, float value, String atom1, String atom2) {
+		RDC rdc = new RDC(resNum, value);
+		rdc.atom1 = atom1;
+		rdc.atom2 = atom2;
+		rdcs.add(rdc);
+	}
+	
 	public void addRDC(int resNum, float value, float uncert) {
 		RDC rdc = new RDC(resNum, value);
 		rdc.uncert = uncert;

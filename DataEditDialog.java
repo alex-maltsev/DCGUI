@@ -113,7 +113,7 @@ public class DataEditDialog extends JDialog implements TableModelListener, Actio
 		nextType.addActionListener(this);
 		
 		mediumName = new JLabel();
-		mediumName.setPreferredSize(new Dimension(90, 30));
+		mediumName.setPreferredSize(new Dimension(180, 30));
 		mediumName.setHorizontalAlignment(SwingConstants.CENTER);
 		
 		typeName = new JLabel();

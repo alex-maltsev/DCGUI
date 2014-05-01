@@ -79,7 +79,7 @@ public class DCOutput {
 		int resNum = scanner.nextInt(); // Get the residue number for the predicted RDC
 		// Skip the next 5 columns (integers and strings only)
 		for(int i=0; i<5; i++)
-			scanner.next("\\w+");
+			scanner.next("[\\w#]+");
 		
 		// Skip 2 more columns (floating point numbers)
 		scanner.nextFloat();

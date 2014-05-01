@@ -26,7 +26,10 @@ public class RDCTypeRecognizer {
 		// First see if it is CAHA for glycine
 		if(rdcType == null)
 			rdcType = recognizeCAHA(atom1Res, atom1Type, atom2Res, atom2Type);
-		
+
+		if(rdcType == null)
+			rdcType = recognizeCBHB(atom1Res, atom1Type, atom2Res, atom2Type);
+
 		return rdcType;
 	}
 	
@@ -64,4 +67,35 @@ public class RDCTypeRecognizer {
 		else
 			return null;
 	}
+	
+	
+	static private RDCType recognizeCBHB(int atom1Res, String atom1Type, int atom2Res, String atom2Type) {
+		// This can't be CAHA if the two atoms are on different residues
+		if(atom1Res != atom2Res)
+			return null;
+		
+		resNum = atom1Res; // Save the residue number
+		
+		// Make sure that at least one of the atoms is CA
+		String nonCBType; // Save the type of the atom coupled with CA
+		
+		if(atom1Type.equalsIgnoreCase("CB")) 
+		{
+			nonCBType = atom2Type;
+		} 
+		else if(atom2Type.equalsIgnoreCase("CB")) 
+		{
+			nonCBType = atom1Type;
+		}
+		else
+			return null; // None of the atoms is CB, so bail here.
+		
+		// Now for the type to be CAHA the non-CB atom must be HB, HB2, HB3, or HB#
+		// Or simply something of the type HB*
+		if(nonCBType.substring(0, 2).equalsIgnoreCase("HB"))
+			return RDCType.CBHB;
+		else
+			return null;
+	}
+
 }

@@ -3,12 +3,13 @@ import java.io.Serializable;
 
 public enum RDCType implements Serializable {
 	NH("NH", "N", "HN", 0, -21585.20, 1.000, true),
-	CAHA("CAHA", "CA", "HA", 0, 44539.47, 1.000, false),
+	CAHA("CAHA", "CA", "HA", 0, 44539.47, 2.000, false),
 	CACO("CACO", "CA", "C", 0, 4284.77, 0.200, true),
 	NCO("NCO", "C", "N", 1, -2609.05, 0.125, true),
 	HNCO("HNCO", "C", "HN", 1, 6666.07, 0.333, true),
 	CACB("CACB", "CA", "CB", 0, 4200.00, 0.200, true), // Notice that coupling constant varies for this type!
-	CBCG("CBCG", "CB", "CG", 0, 4285.00, 0.200, true);
+	CBCG("CBCG", "CB", "CG", 0, 4285.00, 0.200, true),
+	CBHB("CBHB", "CB", "HB", 0, 44539.47, 2.000, false);
 
 	String name;	 // String representation of the type name
 	String atom1, atom2;

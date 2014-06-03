@@ -150,11 +150,9 @@ public class DCOutput {
 			int row = scanner.nextInt() - 1; // Read in the matrix row number
 			for(int i=0; i<3; i++)
 				fittingResult.RotMatrix[row][i] = scanner.nextFloat();
-		} else if(key.equals("PSI")) {
+		} else if(key.equals("EULER_ANGLES")) {
 			fittingResult.psi = scanner.nextFloat();
-		} else if(key.equals("THETA")) {
 			fittingResult.theta = scanner.nextFloat();
-		} else if(key.equals("PHI")) {
 			fittingResult.phi = scanner.nextFloat();
 		}
 	}

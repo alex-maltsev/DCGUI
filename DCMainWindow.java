@@ -475,6 +475,8 @@ public class DCMainWindow {
 					dc.fixRh(setupDialog.getRh());
 				if(setupDialog.doFixOrientation()) 
 					dc.fixOrientation(setupDialog.getPsi(), setupDialog.getTheta(), setupDialog.getPhi());
+				if(setupDialog.doFixSaupe()) 
+					dc.fixSaupe(setupDialog.getSaupeString());
 
 				int ret = dc.runDC();
 				

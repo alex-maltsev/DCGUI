@@ -7,8 +7,9 @@ public class DCWrapper {
 	private File pdbFile, rdcFile;
 	private String outName;
 	private String errorMessage;
-	private boolean fixingDa = false, fixingRh = false, fixingOrientation = false;
+	private boolean fixingDa = false, fixingRh = false, fixingOrientation = false, fixingSaupe = false;
 	private float Da, Rh, psi, theta, phi;
+	private String saupeString;
 	
 	private boolean useInitialOrientation = false;
 	private float initPsi, initTheta, initPhi;
@@ -55,6 +56,11 @@ public class DCWrapper {
 		fixingOrientation = true;
 	}
 
+	public void fixSaupe(String saupeString) {
+		this.saupeString = saupeString;
+		fixingSaupe = true;
+	}
+	
 	public void setInitialOrientation(float psi, float theta, float phi) {
 		initPsi = psi;
 		initTheta = theta;
@@ -115,6 +121,13 @@ public class DCWrapper {
 		// Add output file name
 		buffer.append(" -outD ");
 		buffer.append(outName);
+		
+		// Give special treatment to the easy case of fixing Saupe components
+		if(fixingSaupe) {
+			buffer.append(" -saupe ");
+			buffer.append(saupeString);
+			return buffer.toString();
+		}
 		
 		// If necessary specify tensor parameters to be fixed
 		// Notice that Da and orientation should note be fixed simultaneously!

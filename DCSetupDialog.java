@@ -30,12 +30,13 @@ public class DCSetupDialog extends JDialog {
 	private ArrayList<AlignmentMedium> media;
 	private boolean setupCompleted = false;
 	private JComboBox comboMedium, comboSets;
-	private JCheckBox cbUseAll, cbDa, cbRh, cbOrientation;
-	private JTextField fieldDa, fieldRh, fieldPsi, fieldTheta, fieldPhi;
-	private JPanel anglesPane;
+	private JCheckBox cbUseAll, cbDa, cbRh, cbOrientation, cbSaupe;
+	private JTextField fieldDa, fieldRh, fieldPsi, fieldTheta, fieldPhi, fieldSaupe;
+	private JPanel anglesPane, saupePane;
 	
 	private float Da, Rh, psi, theta, phi;
-	private boolean fixDa = false, fixRh = false, fixOrientation = false;
+	private String saupeString;
+	private boolean fixDa = false, fixRh = false, fixOrientation = false, fixSaupe = false;
 	
 	public DCSetupDialog(JFrame owner, ArrayList<AlignmentMedium> media) {
 		super(owner, "Setup calculation", true); // Create a modal dialog with title
@@ -54,8 +55,8 @@ public class DCSetupDialog extends JDialog {
 		
 		JPanel mainPane = new JPanel();
 		GridBagLayout thisLayout = new GridBagLayout();
-		thisLayout.rowWeights = new double[] {0.1, 0.1, 0.1, 0.1, 0.1, 0.1 };
-		thisLayout.rowHeights = new int[] {7, 7, 7, 7, 7, 7 };
+		thisLayout.rowWeights = new double[] {0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1 };
+		thisLayout.rowHeights = new int[] {7, 7, 7, 7, 7, 7, 7, 7 };
 		thisLayout.columnWeights = new double[] {0.1, 0.1 };
 		thisLayout.columnWidths = new int[] {7, 7 };
 		mainPane.setLayout(thisLayout);
@@ -137,6 +138,10 @@ public class DCSetupDialog extends JDialog {
 		button.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				// If the orientation check box is not selected then do selection
+				if(!cbOrientation.isSelected())
+					cbOrientation.doClick();
+
 				JFileChooser browseDialog = new JFileChooser();
 				int returnVal = browseDialog.showOpenDialog(DCSetupDialog.this);
 				if(returnVal != JFileChooser.APPROVE_OPTION) return; // Stop if no selection was made
@@ -180,12 +185,58 @@ public class DCSetupDialog extends JDialog {
 		mainPane.add(anglesPane, new GridBagConstraints(0, 5, 2, 1, 0.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(5, 0, 0, 0), 0, 0));
 		anglesPane.setVisible(false);  // Make the angles pane invisible until user checks "fix orientation"
 
+		
+		// Row 7 ////////
+		cbSaupe = new JCheckBox("Fix Saupe matrix");
+		mainPane.add(cbSaupe, new GridBagConstraints(0, 6, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
+		
+		button = new JButton("Read from file");
+		mainPane.add(button, new GridBagConstraints(1, 6, 1, 1, 0.0, 0.0, GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 20, 0, 0), 0, 0));
+		button.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// If the Saupe check box is not selected then do selection
+				if(!cbSaupe.isSelected())
+					cbSaupe.doClick();
+				
+				JFileChooser browseDialog = new JFileChooser();
+				int returnVal = browseDialog.showOpenDialog(DCSetupDialog.this);
+				if(returnVal != JFileChooser.APPROVE_OPTION) return; // Stop if no selection was made
+
+				File file = browseDialog.getSelectedFile();
+				DCOutput out = new DCOutput();
+				out.loadMeta(file); // Load meta-data only from the result file
+				
+				if(!out.wasLoadedSuccessfully()) {
+					JOptionPane.showMessageDialog(DCSetupDialog.this, "There was a problem reading the file", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+
+				fieldSaupe.setText(out.saupeString);
+			}
+		});
+
+		// Row 8 ////////
+		saupePane = new JPanel();
+		saupePane.setLayout(new BoxLayout(saupePane, BoxLayout.Y_AXIS));
+		label = new JLabel("Space separated components (c1-c5)");
+		fieldSaupe = new JTextField(20);
+		saupePane.add(label);
+		saupePane.add(fieldSaupe);
+		
+		mainPane.add(saupePane, new GridBagConstraints(0, 7, 2, 1, 0.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.NONE, new Insets(5, 0, 0, 0), 0, 0));
+		saupePane.setVisible(false);
+		
 		cbOrientation.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if(cbOrientation.isSelected()) {
 					anglesPane.setVisible(true);
 					cbDa.setSelected(false); // Enforcing the rule that Da and orientation can't be fixed simultaneously
+					
+					// Hide the Saupe pane
+					cbSaupe.setSelected(false);
+					saupePane.setVisible(false);
 				}
 				else
 					anglesPane.setVisible(false);
@@ -199,13 +250,52 @@ public class DCSetupDialog extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// Enforcing the rule that Da and orientation can't be fixed simultaneously
-				if(cbDa.isSelected() && cbOrientation.isSelected()) {
-					cbOrientation.setSelected(false);
-					anglesPane.setVisible(false);
+				if(cbDa.isSelected()) { 
+					if(cbOrientation.isSelected()) {
+						cbOrientation.setSelected(false);
+						anglesPane.setVisible(false);
+					}
+					
+					// Hide the Saupe pane in any case
+					cbSaupe.setSelected(false);
+					saupePane.setVisible(false);
+					DCSetupDialog.this.pack();
 				}				
 			}		
 		});
 		
+		cbRh.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// Enforcing the rule that Da and orientation can't be fixed simultaneously
+				if(cbRh.isSelected()) { 
+					// Hide the Saupe pane
+					cbSaupe.setSelected(false);
+					saupePane.setVisible(false);
+					DCSetupDialog.this.pack();
+				}				
+			}		
+		});
+
+		cbSaupe.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(cbSaupe.isSelected()) {
+					saupePane.setVisible(true);
+					anglesPane.setVisible(false);
+					// Uncheck all the other mode boxes
+					cbDa.setSelected(false);
+					cbRh.setSelected(false);
+					cbOrientation.setSelected(false);
+				}
+				else
+					saupePane.setVisible(false);
+				
+				DCSetupDialog.this.pack();
+			}
+			
+		});
+
 		this.add(mainPane);
 		contentPane.add(Box.createRigidArea(new Dimension(0, 15)));
 		
@@ -222,6 +312,7 @@ public class DCSetupDialog extends JDialog {
 				fixDa = cbDa.isSelected();
 				fixRh = cbRh.isSelected();
 				fixOrientation = cbOrientation.isSelected();
+				fixSaupe = cbSaupe.isSelected();
 				
 				try {
 					if(fixDa) 
@@ -235,6 +326,10 @@ public class DCSetupDialog extends JDialog {
 						theta = Float.parseFloat(fieldTheta.getText());
 						phi = Float.parseFloat(fieldPhi.getText());
 					}
+					
+					if(fixSaupe)
+						saupeString = fieldSaupe.getText();
+					
 				} catch(Exception exc) {
 					JOptionPane.showMessageDialog(DCSetupDialog.this, "One or more of the values have problems", "Error", JOptionPane.ERROR_MESSAGE);
 					setupCompleted = false;
@@ -292,6 +387,10 @@ public class DCSetupDialog extends JDialog {
 		return fixOrientation;
 	}
 	
+	public boolean doFixSaupe() {
+		return fixSaupe;
+	}
+
 	public float getDa() {
 		return Da;
 	}
@@ -310,5 +409,9 @@ public class DCSetupDialog extends JDialog {
 	
 	public float getPhi() {
 		return phi;
+	}
+	
+	public String getSaupeString() {
+		return saupeString;
 	}
 }

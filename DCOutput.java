@@ -7,6 +7,7 @@ import java.util.Scanner;
 
 public class DCOutput {
 	public FittingResult fittingResult;
+	public String saupeString; // TODO: move into FittingResult class
 	
 	private File resultFile;
 	private AlignmentMedium medium;
@@ -144,8 +145,10 @@ public class DCOutput {
 		} else if(key.equals("Rhombicity")) {
 			fittingResult.Rh = scanner.nextFloat();
 		} else if(key.equals("SAUPE")) {
+			saupeString = scanner.nextLine();
+			Scanner subScanner = new Scanner(saupeString);
 			for(int i=0; i<5; i++)
-				fittingResult.Saupe[i] = scanner.nextFloat();
+				fittingResult.Saupe[i] = subScanner.nextFloat();
 		} else if(key.equals("ROTATION_MATRIX")) {
 			int row = scanner.nextInt() - 1; // Read in the matrix row number
 			for(int i=0; i<3; i++)
@@ -154,6 +157,6 @@ public class DCOutput {
 			fittingResult.psi = scanner.nextFloat();
 			fittingResult.theta = scanner.nextFloat();
 			fittingResult.phi = scanner.nextFloat();
-		}
+		} 
 	}
 }
